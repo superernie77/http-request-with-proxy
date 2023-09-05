@@ -22,19 +22,7 @@ public class RequestExample {
 		System.out.println("Property set");
 		System.out.println(System.getProperty("jdk.http.auth.tunneling.disabledSchemes"));
 	}
-
-	public static void main(String[] args) throws MalformedURLException, IOException {
-		RequestExample reqex = new RequestExample();
-		
-		HttpResponse resp = reqex.request(new URL("http://www.google.de"), "", "GET");
-		
-		System.out.println(resp.getBody());
-	}
-
-	private void setup() {
-		Authenticator.setDefault(new BasicAuthenticator());
-	}
-
+	
 	private final class BasicAuthenticator extends Authenticator {
 		protected PasswordAuthentication getPasswordAuthentication() {
 
@@ -44,14 +32,26 @@ public class RequestExample {
 		}
 	}
 
+	public static void main(String[] args) throws MalformedURLException, IOException {
+		RequestExample reqex = new RequestExample();
+		
+		HttpResponse resp = reqex.request(new URL("http://www.google.de"), "", "GET");
+		
+		System.out.println(resp.getBody());
+	}
+	
 	public HttpResponse request(URL urlToCall, String requestBody, String method) throws IOException {
 
-		setup();
+		Authenticator.setDefault(new BasicAuthenticator());
 
 		final HttpURLConnection conn = openConnection(urlToCall);
 		conn.setRequestMethod(method.toUpperCase());
 		conn.setDoOutput(true);
-
+		conn.setConnectTimeout(10_000);
+		conn.setReadTimeout(60_000);
+		conn.setAuthenticator(new BasicAuthenticator());
+		//connection.addRequestProperty(null, null);
+		
 		if (method.toUpperCase().equals("POST")) {
 			DataOutputStream wr = null;
 			try {
@@ -71,10 +71,6 @@ public class RequestExample {
 	private HttpURLConnection openConnection(URL finalURL) throws IOException {
 		HttpURLConnection connection = (HttpURLConnection) finalURL.openConnection(proxy());
 		//HttpURLConnection connection = (HttpURLConnection) finalURL.openConnection();
-		connection.setConnectTimeout(10_000);
-		connection.setReadTimeout(60_000);
-		//connection.addRequestProperty(null, null);
-		connection.setAuthenticator(new BasicAuthenticator());
 		return connection;
 	}
 
